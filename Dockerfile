@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 
 RUN apt-get update &&\
-   apt-get install -y git curl bzip2 nginx sudo nano &&\
+   apt-get install -y git curl xz-utils nginx sudo nano dos2unix &&\
    useradd -ms /bin/bash cardano &&\
    mkdir -m 0755 /nix &&\
    chown cardano /nix &&\
@@ -23,12 +23,16 @@ ENV USER cardano
 RUN curl https://nixos.org/nix/install | sh
 
 WORKDIR /home/cardano/cardano-sl
-RUN git checkout tags/3.0.2
+RUN git checkout tags/3.2.0
 
 RUN . /home/cardano/.nix-profile/etc/profile.d/nix.sh &&\
   nix-build -A connectScripts.testnet.wallet -o connect-to-testnet
 
 RUN . /home/cardano/.nix-profile/etc/profile.d/nix.sh &&\
   nix-build -A connectScripts.mainnet.wallet -o connect-to-mainnet
+
+RUN mv /home/cardano/cardano-sl/start-cardano-container.sh /home/cardano/cardano-sl/start-cardano-container.sh.dos
+RUN cat /home/cardano/cardano-sl/start-cardano-container.sh.dos | dos2unix > /home/cardano/cardano-sl/start-cardano-container.sh
+RUN chmod +x /home/cardano/cardano-sl/start-cardano-container.sh
 
 ENTRYPOINT ["/home/cardano/cardano-sl/start-cardano-container.sh"]
